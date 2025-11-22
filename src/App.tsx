@@ -2,7 +2,7 @@ import React, { useState, useEffect, type KeyboardEvent } from 'react'
 import './App.css'
 
 interface Message {
-  id?: string
+  id: string
   text: string
   user: {
     name: string
@@ -12,17 +12,19 @@ interface Message {
 
 const initialPosts: Message[] = [
   {
+    id: '1',
     text: "Post 1 content",
     user: {
       name: 'Sandeep',
-      avatarUrl: ''
+      avatarUrl: 'https://images.pexels.com/photos/15099919/pexels-photo-15099919.jpeg'
     }
   },
   {
+    id: '2',
     text: "Post 2 content",
     user: {
       name: 'Rashna',
-      avatarUrl: ''
+      avatarUrl: 'https://images.pexels.com/photos/15099919/pexels-photo-15099919.jpeg'
     }
   },
 ]
@@ -30,7 +32,8 @@ const initialPosts: Message[] = [
 function App() {
   const [posts, setPosts] = useState(initialPosts)
   const [newMessage, setNewMessage] = useState('')
-
+  const [editingId, setEditingId] = useState('')
+  const [editingText, setEditingText] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,15 +57,34 @@ function App() {
   const onNewMessageKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const newPost: Message = {
+        id: 'temp',
         text: newMessage,
         user: {
           name: '',
-          avatarUrl: ''
+          avatarUrl: 'https://images.pexels.com/photos/15099919/pexels-photo-15099919.jpeg'
         },
       }
       setPosts((prevPosts) => ([...prevPosts, newPost]))
       setNewMessage('');
     }
+  }
+
+  const onEditClick = (post: Message) => {
+    setEditingId(post.id)
+    setEditingText(post.text)
+  }
+
+  const onSaveClick = () => {
+    setPosts((prevPosts) => (
+      prevPosts.map((post) => {
+        if (post.id === editingId) {
+          return {...post, text: editingText};
+        }
+
+        return post;
+      })
+    ))
+    setEditingId('')
   }
 
   return (
@@ -71,10 +93,20 @@ function App() {
       <ul className="posts">
         {posts.map((post) => (
           <li className="post">
-            <img src={post.user.avatarUrl} />
+            <img className="poster-image" src={post.user.avatarUrl} />
             <div className="poster-and-content">
               <p className="post-author">{post.user.name}</p>
-              <p className="post-content">{post.text}</p>
+              {editingId === post.id ? 
+                (<p>
+                  <input value={editingText}
+                    onChange={e => setEditingText(e.currentTarget.value)} />
+                  <button type="button" onClick={onSaveClick}>Save</button>
+                </p>) :
+                (<p className="post-content">
+                  <span>{post.text}</span>
+                  <button type="button" onClick={() => onEditClick(post)}>Edit</button>
+                </p>)
+              }
             </div>
           </li>
         ))}

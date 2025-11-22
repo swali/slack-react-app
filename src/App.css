@@ -9,4 +9,26 @@
   
 }
 
-.
+.posts {
+  list-style: none;
+  padding-left: 0;
+}
+
+ .post {
+  display: flex;
+  align-items: flex-start;
+ }
+
+.post-author {
+  font-weight: 600;
+  margin: 0 0 4px 12px;
+}
+
+.poster-image {
+  height: 20px;
+  width: 20px;
+}
+
+.post-content {
+  margin: 0 0 12px 12px;
+}
