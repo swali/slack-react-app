@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type KeyboardEvent } from 'react'
+import React, { useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import './App.css'
 
 interface Message {
@@ -34,6 +34,9 @@ function App() {
   const [newMessage, setNewMessage] = useState('')
   const [editingId, setEditingId] = useState('')
   const [editingText, setEditingText] = useState('')
+  const [newId, setNewId] = useState(12345)
+  const [serverId, setServerId] = useState(42345)
+  const editingInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,17 +58,37 @@ function App() {
   }
 
   const onNewMessageKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && newMessage) {
       const newPost: Message = {
-        id: 'temp',
+        id: String(newId),
         text: newMessage,
         user: {
-          name: '',
+          name: 'Current user',
           avatarUrl: 'https://images.pexels.com/photos/15099919/pexels-photo-15099919.jpeg'
         },
       }
+      setNewId(newId + 1);
       setPosts((prevPosts) => ([...prevPosts, newPost]))
       setNewMessage('');
+      createNewMessage(newPost)
+    }
+  }
+
+  const createNewMessage = async (newPost: Message) => {
+    try {
+      await fetch('blah.com', { method: 'POST', body: JSON.stringify(newPost) })
+    } catch {
+      setPosts((prevPosts) => (
+        prevPosts.map((post) => {
+          if (post.id === newPost.id) {
+            const updatedPost = {...post, id: String(serverId)}
+            setServerId(serverId + 1)
+            return updatedPost
+          }
+
+          return post;
+        })
+      ))
     }
   }
 
@@ -87,6 +110,18 @@ function App() {
     setEditingId('')
   }
 
+  const onEditingInputKeyDown = ((event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      onSaveClick()
+    }
+  })
+
+  useEffect(() => {
+    if (editingId && editingInputRef?.current) {
+      editingInputRef.current.focus();
+    }
+  }, [editingId])
+
   return (
     <div className="app">
       <h1 className="header">Slack</h1>
@@ -99,7 +134,9 @@ function App() {
               {editingId === post.id ? 
                 (<p>
                   <input value={editingText}
-                    onChange={e => setEditingText(e.currentTarget.value)} />
+                    ref={editingInputRef}
+                    onChange={e => setEditingText(e.currentTarget.value)}
+                    onKeyDown={onEditingInputKeyDown} />
                   <button type="button" onClick={onSaveClick}>Save</button>
                 </p>) :
                 (<p className="post-content">
